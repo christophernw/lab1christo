@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 import datetime
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 
 # Create your views here.
@@ -69,3 +69,22 @@ def logout_user(request):
     response = HttpResponseRedirect(reverse('wishlist:login'))
     response.delete_cookie('last_login')
     return response
+
+def show_ajax(request):
+    data_barang_wishlist = BarangWishlist.objects.all()
+    context = {
+        'list_barang': data_barang_wishlist,
+        'nama': 'Christopher Nathanael Wijaya',
+        'last_login': request.COOKIES['last_login'],
+    }
+    return render(request, "wishlist_ajax.html", context)
+@login_required(login_url='/wishlist/login/')
+def create_wishlist_json(request):
+    if request.method == 'POST':
+        nama_barang = request.POST.get('item-name')
+        harga_barang = request.POST.get('item-price')
+        deskripsi = request.POST.get('item-description')
+        barang = BarangWishlist(nama_barang=nama_barang, harga_barang=harga_barang, deskripsi=deskripsi)
+        barang.save()
+        return JsonResponse({'nama_barang':nama_barang, 'harga_barang':harga_barang, 'deskripsi':deskripsi})
+        
